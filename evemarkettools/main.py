@@ -8,10 +8,9 @@ Original file is located at
 """
 
 #Import the dependencies
-import urllib
+import urllib.request
 import pandas as pd
-import requests, json
-from pandas.io.json import json_normalize
+import json
 import warnings
 import bz2
 
@@ -137,7 +136,6 @@ def plot_order_depth(typeID,max_price=0,min_price=0, regionID=10000002, systemID
     df = df.loc[(df['Price']<max_price)&(df['Price']>min_price)]
     df['Volume_cumsum'] = df['Volume'].cumsum()
     df.plot(x='Price',y='Volume_cumsum',kind='area')
-    plt.show()
 
 #Most Important URLs
 #https://www.fuzzwork.co.uk/dump/latest/invTypes.csv.bz2
@@ -168,7 +166,6 @@ def fuzz_static_dump(url='https://www.fuzzwork.co.uk/dump/latest/invTypes.csv.bz
         zipfile = bz2.BZ2File(str(filename)+'.bz2')
         data = zipfile.read() 
         open(filename, 'wb').write(data)
-        !rm invTypes.csv.bz2
         invTypes = pd.read_csv(filename)
         return invTypes
 
