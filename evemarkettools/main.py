@@ -27,7 +27,7 @@ def mean_market_vol(typeID, regionID=10000002,days=0):
         Returns the average daily volume as a float value
 
     Raises:
-        TypeError: Specified a timeframe that lower than zero
+        TypeError: Specified a timeframe lower than zero
     """
     with urllib.request.urlopen("https://esi.evetech.net/latest/markets/{}/history/?datasource=tranquility&type_id={}".format(regionID, typeID)) as url:
         data = json.loads(url.read().decode())
