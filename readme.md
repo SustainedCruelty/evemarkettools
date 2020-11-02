@@ -11,7 +11,7 @@ Players of Eve Online can participate in a number of in-game professions and act
 # The EVE ESI
 
 ESI is the name of EVE Online’s publicly available API, 
-allowing you to query the game itself to get info about your character, corporation and more
+allowing you to query the game itself to get info about your character, corporation and more.
 The ESI API is the official RESTful API for EVE third party development. 
 You can find all the endpoints and try them out at https://esi.evetech.net/ui/.
 
