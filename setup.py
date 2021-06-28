@@ -11,7 +11,7 @@ setup(
   download_url = 'https://github.com/SustainedCruelty/evemarkettools/archive/v0.0.1.tar.gz',   
   keywords = ['EVE Online', 'API', 'EVE ESI','Swagger'], 
   install_requires=['requests',
-					          'pandas',],
+		'pandas',],
   classifiers=[
     'Development Status :: 3 - Alpha',      
     'Intended Audience :: Developers',      
