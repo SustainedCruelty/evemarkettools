@@ -1,16 +1,27 @@
-# EVE Market Toolkit
+# evemarkettools
 
+evemarkettools is a simple python library for pulling price data from the EVE ESI.
+It also contains functions to convert type_ids, system_ids, region_ids etc. into their respective names and vice versa.
 
-This library contains several functions to access and plot market data from the EVE ESI
+## Installation
 
-# EVE Online
+Use the package manager [pip](https://pip.pypa.io/en/stable/) to install evemarkettools.
 
-Eve Online is a space-based, persistent world massively multiplayer online role-playing game developed and published by CCP Games. 
-Players of Eve Online can participate in a number of in-game professions and activities, including mining, piracy, manufacturing, trading, exploration, and combat.
+```bash
+pip install evemarkettools
+```
 
-# The EVE ESI
+## Usage
 
-ESI is the name of EVE Online’s publicly available API, 
-allowing you to query the game itself to get info about your character, corporation and more
-The ESI API is the official RESTful API for EVE third party development. 
-You can find all the endpoints and try them out at https://esi.evetech.net/ui/.
+```python
+import evemarkettools as emt
+
+emt.typeNameToID('Sabre') # returns 22456
+emt.regionNameToID('The Forge') # returns 10000002
+emt.item_price(22456, region_id=10000002, order_type='sell') # returns 63560000
+emt.item_quantity_price(22456, quantity=100, region_id=10000002) # returns 6531720000
+
+```
+
+## License
+[MIT](https://choosealicense.com/licenses/mit/)
