@@ -3,8 +3,7 @@ import pandas as pd
 import json
 import bz2
 import concurrent.futures
-import os.path
-
+from io import StringIO
 
 def item_price(type_id: int, region_id: int = 10000002, system_id: int = None, order_type: str = 'sell'):
     """
@@ -19,13 +18,22 @@ def item_price(type_id: int, region_id: int = 10000002, system_id: int = None, o
     Returns:
         float: returns the min sell or max buy as a float value (if order_type is set to 'buy' or 'sell')
         dict: returns the min sell and max buy in a dictionary as 'sell' and 'buy' (if order_type is set to 'all')
+        NoneType: returns none if there are no orders in the region
     """
-    # Jita: 30000142, Amarr: 30002187, Hek: 30002053, Rens: 30002510, Dodixie: 30002659
     if order_type not in ['sell', 'buy', 'all']:
         raise ValueError("You didn't specify a valid order type ('sell','buy','all')")
-    r = requests.get(
-        f"https://esi.evetech.net/latest/markets/{region_id}/orders/?datasource=tranquility&order_type={order_type}&page=1&type_id={type_id}")
+    if type_id not in invTypes['typeID'].values:
+        raise ValueError(f"{type_id} is not a valid type_id")
+    if region_id not in mapRegions['regionID'].values:
+        raise ValueError(f"{region_id} is not a valid region_id")
+    if system_id is not None and system_id not in mapSolarSystems['solarSystemID'].values:
+        raise ValueError(f"{system_id} is not a valid system_id")
+    r = requests.get(f"https://esi.evetech.net/latest/markets/{region_id}/orders/?datasource=tranquility&order_type={order_type}&page=1&type_id={type_id}")
     orders = pd.DataFrame(r.json())
+    if r.status_code != 200:
+        raise ValueError(f"request returned status code {r.status_code}")
+    if orders.empty:
+        return None
     pages = int(r.headers['X-Pages'])
     if pages > 1:
         for i in range(2, pages + 1):
@@ -60,11 +68,19 @@ def order_depth(type_id: int, region_id: int = 10000002, system_id: int = None, 
     """
     if order_type not in ['sell', 'buy', 'all']:
         raise ValueError("You didn't specify a valid order type ('sell','buy','all')")
+    if type_id not in invTypes['typeID'].values:
+        raise ValueError(f"{type_id} is not a valid type_id")
+    if region_id not in mapRegions['regionID'].values:
+        raise ValueError(f"{region_id} is not a valid region_id")
+    if system_id is not None and system_id not in mapSolarSystems['solarSystemID'].values:
+        raise ValueError(f"{system_id} is not a valid system_id")
     r = requests.get(
         f"https://esi.evetech.net/latest/markets/{region_id}/orders/?datasource=tranquility&order_type={order_type}&page=1&type_id={type_id}")
-    if r.status_code != 200 or r.json() == []:
-        return
     orders = pd.DataFrame(r.json())
+    if r.status_code != 200:
+        raise ValueError(f"request returned status code {r.status_code}")
+    if orders.empty:
+        return None
     pages = int(r.headers['X-Pages'])
     if pages > 1:
         for i in range(2, pages + 1):
@@ -92,7 +108,8 @@ def market_history(type_id: int, columns='all', region_id: int = 10000002, days:
          days: pulls the market history for the last n days (1-400)
 
     Returns:
-        returns a DataFrame with the market history. the oldest entry is at the top (index 0)
+        DataFrame: returns a DataFrame with the market history. the oldest entry is at the top (index 0)
+        NoneType: returns None if there is no market history
     """
 
     if isinstance(columns, list):
@@ -102,10 +119,18 @@ def market_history(type_id: int, columns='all', region_id: int = 10000002, days:
     if not set(columns).issubset({'highest', 'lowest', 'average', 'order_count', 'volume', 'all'}):
         raise ValueError(
             "Those aren't valid columns. Supported types are: 'highest','lowest','average','order_count','volume','all'")
+    if type_id not in invTypes['typeID'].values:
+        raise ValueError(f"{type_id} is not a valid type_id")
+    if region_id not in mapRegions['regionID'].values:
+        raise ValueError(f"{region_id} is not a valid region_id")
     if days <= 0:
         raise ValueError("'days' needs to be greater than zero and less than 400")
     r = requests.get(
         f"https://esi.evetech.net/latest/markets/{region_id}/history/?datasource=tranquility&type_id={type_id}")
+    if r.status_code != 200:
+        raise ValueError(f"request returned status code {r.status_code}")
+    if hist.empty:
+        return None
     hist = pd.DataFrame(r.json())
     hist = hist.tail(days).reset_index(drop=True)
     if columns == {'all'} or 'all' in columns:
@@ -142,7 +167,7 @@ def item_quantity_price(type_id: int, quantity: int, region_id: int = 10000002, 
             order += 1
 
 
-def structure_orders(refresh_token: str, structure_id: int = 1028858195912):
+def structure_orders(refresh_token: str = "-zDjD0DLKfIFWBG6sC-sIrTfdPtxhiuYvnoPO7nLP4M", structure_id: int = 1028858195912):
     """
         Pulls all market orders placed in a specified structure
 
@@ -204,60 +229,56 @@ def fuzz_static_dump(url='https://www.fuzzwork.co.uk/dump/latest/invTypes.csv.bz
     Returns:
         Dataframe containing the data from the downloaded csv.
     """
-    comp_file = url.split('/')[-1]
-    csv_file = comp_file.strip('.bz2')
-    if not os.path.isfile(csv_file):
-        r = requests.get(url)
-        f = bz2.decompress(r.content)
-        open(csv_file, 'wb').write(f)
-    return pd.read_csv(csv_file)
+    r = requests.get(url)
+    f = bz2.decompress(r.content)
+    return pd.read_csv(StringIO(f.decode('UTF-8')))
 
 
 def typeIDToName(typeID: int):
     if typeID not in invTypes['typeID'].values:
-        raise ValueError("thats not a valid typeid")
+        raise ValueError(f"{typeID} is not a valid typeid")
     return invTypes['typeName'].loc[invTypes['typeID'] == typeID].iloc[0]
 
 
 def typeNameToID(typeName: str):
     if typeName not in invTypes['typeName'].values:
-        raise ValueError("thats not a valid typename")
+        raise ValueError(f"{typeName} is not a valid typename")
     return invTypes['typeID'].loc[invTypes['typeName'] == typeName].iloc[0]
 
 
 def typeIDToGroupID(typeID: int):
     if typeID not in invTypes['typeID'].values:
-        raise ValueError("thats not a valid typeid")
+        raise ValueError(f"{typeID} is not a valid typeid")
     return invTypes['groupID'].loc[invTypes['typeID'] == typeID].iloc[0]
 
 
 def groupIDToTypeID(groupID: int):
     if groupID not in invTypes['groupID'].values:
-        raise ValueError("thats not a valid groupid")
+        raise ValueError(f"{groupID} is not a valid groupid")
     return list(invTypes['typeID'].loc[invTypes['groupID'] == groupID])
 
 
 def regionNameToID(regionName: str):
     if regionName not in mapRegions['regionName'].values:
-        raise ValueError("thats not a valid region name")
+        raise ValueError(f"{regionName} is not a valid region name")
     return mapRegions['regionID'].loc[mapRegions['regionName'] == regionName].iloc[0]
 
 
 def regionIDToName(regionID: int):
     if regionID not in mapRegions['regionID'].values:
-        raise ValueError("thats not a valid region ID")
+        raise ValueError(f"{regionID} is not a valid region ID")
     return mapRegions['regionName'].loc[mapRegions['regionID'] == regionID].iloc[0]
 
 
 def sysNameToID(sysName: str):
     if sysName not in mapSolarSystems['solarSystemName'].values:
-        raise ValueError("thats not a valid system name")
+        raise ValueError(f"{sysName} is not a valid system name")
     return mapSolarSystems['solarSystemID'].loc[(mapSolarSystems['solarSystemName'] == sysName)].iloc[0]
 
 
 def sysIDToName(sysID: int):
     if sysID not in mapSolarSystems['solarSystemID'].values:
-        raise ValueError("thats not a valid region name")
+        raise ValueError(f"{sysID} is not a valid systemID")
     return mapSolarSystems['solarSystemName'].loc[(mapSolarSystems['solarSystemID'] == sysID)].iloc[0]
 
 
@@ -319,6 +340,8 @@ def all_time_low(type_ids: list, timeframe: int = 400, region_id: int = 10000002
 
 def price_hist_low(typeID: int, days: int, region_id: int):
     hist = market_history(typeID, region_id=region_id, days=days, columns=['average', 'volume'])
+    if hist is None:
+        return None
     return {'typeID': typeID,
             'current_avg': hist['average'][-1:].iloc[0],
             'lowest_avg': hist['average'].min(),
