@@ -129,9 +129,9 @@ def market_history(type_id: int, columns='all', region_id: int = 10000002, days:
         f"https://esi.evetech.net/latest/markets/{region_id}/history/?datasource=tranquility&type_id={type_id}")
     if r.status_code != 200:
         raise ValueError(f"request returned status code {r.status_code}")
+    hist = pd.DataFrame(r.json())
     if hist.empty:
         return None
-    hist = pd.DataFrame(r.json())
     hist = hist.tail(days).reset_index(drop=True)
     if columns == {'all'} or 'all' in columns:
         return hist
