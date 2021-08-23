@@ -22,7 +22,7 @@ emt.item_price(22456, region_id=10000002, order_type='sell') # returns 63560000
 emt.item_quantity_price(22456, quantity=100, region_id=10000002) # returns 6531720000
 
 ```
-Check out this [colab-notebook](https://colab.research.google.com/drive/1XipQmxwsY9LW6sSaxfjr5VNgzWtifIA2?usp=sharing) to see what other function the library provides
+Check out this [colab-notebook](https://colab.research.google.com/drive/1XipQmxwsY9LW6sSaxfjr5VNgzWtifIA2?usp=sharing) to see what other function the library provides and how to use them
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
