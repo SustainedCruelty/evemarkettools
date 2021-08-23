@@ -5,10 +5,10 @@ It also contains functions to convert type_ids, system_ids, region_ids etc. into
 
 ## Installation
 
-Use the package manager [pip](https://pip.pypa.io/en/stable/) to install evemarkettools.
+Use the package manager [pip](https://pypi.org/project/evemarkettools/) to install evemarkettools.
 
 ```bash
-pip install evemarkettools==0.0.2a
+pip install evemarkettools
 ```
 
 ## Usage
