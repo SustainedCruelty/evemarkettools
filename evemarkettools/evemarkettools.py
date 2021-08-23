@@ -347,6 +347,36 @@ def price_hist_low(typeID: int, days: int, region_id: int):
             'lowest_avg': hist['average'].min(),
             'avg_volume': hist['volume'].mean()
             }
+            
+def add_price(df, region_id: int = 10000002) -> pd.DataFrame:
+    """
+    Adds market prices to a dataframe with the columns type_id and quantity
+
+    Args:
+        df: dataframe to append the prices to. df needs the columns type_id and quantity!
+        region_id: what region to pull the prices from
+
+    Returns:
+        returns the passed in dataframe with the additional column price
+    """
+    df = df.astype({"type_id": int, "quantity": int})
+    item_prices = pd.DataFrame()
+
+    def get_price(typeID, quantity, region_id) -> dict:
+        try:
+            price = item_quantity_price(int(typeID), quantity, region_id)
+        except ValueError as e:
+            print(typeID, e)
+            price = item_price(int(typeID)) * quantity
+        return {'type_id': typeID,
+                'price': price}
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(df) + 1, 200)) as executor:
+        results = executor.map(get_price, df['type_id'], df['quantity'], [region_id] * len(df))
+    for r in results:
+        item_prices = item_prices.append(r, ignore_index=True)
+    df = df.merge(item_prices, on='type_id')
+    return df
 
 invTypes = fuzz_static_dump()
 mapRegions = fuzz_static_dump('https://www.fuzzwork.co.uk/dump/latest/mapRegions.csv.bz2')
