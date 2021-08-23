@@ -2,7 +2,7 @@ from distutils.core import setup
 setup(
   name = 'evemarkettools',         
   packages = ['evemarkettools'],   
-  version = '0.0.2a',      
+  version = '0.0.5',      
   license='MIT',        
   description = 'Provides a variety of functions to extract market information from the EVE ESI',  
   author = 'Filip Jöde',                   
